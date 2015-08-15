@@ -29,11 +29,11 @@ interface MetadataFactory
      * If no metadata is available, null is returned.
      * Child classes will not be included in the final result.
      *
-     * @param string  $className Name of the class to load the metadata of.
-     * @param integer $flags     Bitwise flag for options.
-     *                           For example `LOAD_TRAITS & LOAD_INTERFACES` will load
-     *                           mapping data from the class and any traits and/or interfaces
-     *                           that were imported by the class.
+     * @param string $className Name of the class to load the metadata of.
+     * @param int    $flags     Bitwise flag for options.
+     *                          For example `LOAD_TRAITS & LOAD_INTERFACES` will load
+     *                          mapping data from the class and any traits and/or interfaces
+     *                          that were imported by the class.
      *
      * @return ClassMetadata|null
      */
@@ -45,11 +45,11 @@ interface MetadataFactory
      * If no metadata is available, null is returned.
      * Child classes will be included in the final result.
      *
-     * @param string  $className Name of the class to load the metadata of.
-     * @param integer $flags     Bitwise flag for options.
-     *                           For example `LOAD_TRAITS & LOAD_INTERFACES` will load
-     *                           mapping data from the class and any traits and/or interfaces
-     *                           that were imported by the class.
+     * @param string $className Name of the class to load the metadata of.
+     * @param int    $flags     Bitwise flag for options.
+     *                          For example `LOAD_TRAITS & LOAD_INTERFACES` will load
+     *                          mapping data from the class and any traits and/or interfaces
+     *                          that were imported by the class.
      *
      * @return ClassMetadata|null
      */

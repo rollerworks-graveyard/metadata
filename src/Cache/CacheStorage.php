@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Rollerworks Metadata Component package.
+ *
+ * (c) Sebastiaan Stok <s.stok@rollerscapes.net>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Rollerworks\Component\Metadata\Cache;
 
 use Rollerworks\Component\Metadata\ClassMetadata;
@@ -7,13 +16,13 @@ use Rollerworks\Component\Metadata\ClassMetadata;
 interface CacheStorage
 {
     /**
-     * Fetches a class metadata instance from the cache
+     * Fetches a class metadata instance from the cache.
      *
      * @param string $className
      *
      * @return ClassMetadata|null
      */
-    function fetch($className);
+    public function fetch($className);
 
     /**
      * Tests if a class metadata entry exists in the cache.
@@ -22,19 +31,19 @@ interface CacheStorage
      *
      * @return bool
      */
-    function contains($className);
+    public function contains($className);
 
     /**
      * Puts the class metadata into the cache.
      *
      * @param ClassMetadata $metadata
      */
-    function save(ClassMetadata $metadata);
+    public function save(ClassMetadata $metadata);
 
     /**
      * Deletes a cached class metadata entry.
      *
      * @param string $className
      */
-    function delete($className);
+    public function delete($className);
 }

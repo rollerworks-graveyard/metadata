@@ -1,0 +1,7 @@
+# Gush configuration file, any comments will be lost.
+repo_adapter: github
+issue_tracker: github
+repo_org: rollerworks
+repo_name: rollerworks-metadata
+issue_project_org: rollerworks
+issue_project_name: rollerworks-metadata

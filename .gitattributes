@@ -1,0 +1,12 @@
+* text=auto
+
+# Always use LF
+core.autocrlf=lf
+
+/tests export-ignore
+
+.gitignore export-ignore
+.gitattributes export-ignore
+.php_cs export-ignore
+.editorconfig export-ignore
+phpunit.xml.dist export-ignore

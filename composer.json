@@ -1,0 +1,30 @@
+{
+    "name": "rollerworks/metadata",
+    "description": "The Rollerworks Metadata Component provides a mechanisms to easily load annotated configuration (or metadata) of Classes, methods and properties from different sources like PHPDoc Annotations, YAML or XML.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sebastiaan Stok",
+            "email": "s.stok@rollerscapes.net"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "doctrine/annotations": "^1.2.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rollerworks\\Component\\Metadata\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Rollerworks\\Component\\Metadata\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1-dev"
+        }
+    }
+}

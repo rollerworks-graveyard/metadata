@@ -16,12 +16,12 @@ interface MetadataFactory
     /**
      * Load mapping information from imported traits.
      */
-    const LOAD_TRAITS = 1;
+    const INCLUDE_TRAITS = 1;
 
     /**
      * Load mapping information from imported interfaces.
      */
-    const LOAD_INTERFACES = 2;
+    const INCLUDE_INTERFACES = 2;
 
     /**
      * Returns (only) the metadata of the given class name.
@@ -30,28 +30,27 @@ interface MetadataFactory
      * Child classes will not be included in the final result.
      *
      * @param string $className Name of the class to load the metadata of.
-     * @param int    $flags     Bitwise flag for options.
-     *                          For example `LOAD_TRAITS & LOAD_INTERFACES` will load
-     *                          mapping data from the class and any traits and/or interfaces
-     *                          that were imported by the class.
      *
-     * @return ClassMetadata|null
+     * @return ClassMetadata
      */
-    public function getClassMetadata($className, $flags = 0);
+    public function getClassMetadata($className);
 
     /**
-     * Returns the merged metadata of the given class name.
+     * Returns the merged metadata of the given class name and its children.
+     *
+     * Optionally the metadata of implemented interfaces and/or traits
+     * can be included also.
      *
      * If no metadata is available, null is returned.
      * Child classes will be included in the final result.
      *
      * @param string $className Name of the class to load the metadata of.
      * @param int    $flags     Bitwise flag for options.
-     *                          For example `LOAD_TRAITS & LOAD_INTERFACES` will load
-     *                          mapping data from the class and any traits and/or interfaces
-     *                          that were imported by the class.
+     *                          For example `MetadataFactory::INCLUDE_TRAITS & MetadataFactory::INCLUDE_INTERFACES`
+     *                          will load mapping data from the class, any traits
+     *                          and/or interfaces that were imported by the class.
      *
-     * @return ClassMetadata|null
+     * @return ClassMetadata
      */
     public function getMergedClassMetadata($className, $flags = 0);
 }

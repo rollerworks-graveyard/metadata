@@ -30,14 +30,32 @@ interface ClassMetadata extends \Serializable
     /**
      * Returns the properties metadata of a class.
      *
-     * @return object[]
+     * @return PropertyMetadata[]
      */
     public function getProperties();
 
     /**
+     * Returns the properties metadata of a class.
+     *
+     * @param string $name Name of the property.
+     *
+     * @return PropertyMetadata|null
+     */
+    public function getProperty($name);
+
+    /**
      * Returns the methods metadata of a class.
      *
-     * @return object[]
+     * @return MethodMetadata[]
      */
     public function getMethods();
+
+    /**
+     * Returns the methods metadata of a class.
+     *
+     * @param string $name Name of the method.
+     *
+     * @return MethodMetadata|null
+     */
+    public function getMethod($name);
 }

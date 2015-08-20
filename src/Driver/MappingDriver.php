@@ -29,7 +29,7 @@ interface MappingDriver
      *
      * @param \ReflectionClass $class
      *
-     * @return ClassMetadata|null
+     * @return ClassMetadata|null Returns null when no metadata is found.
      */
     public function loadMetadataForClass(\ReflectionClass $class);
 }

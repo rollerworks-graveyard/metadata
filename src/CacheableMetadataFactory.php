@@ -42,11 +42,11 @@ final class CacheableMetadataFactory implements MetadataFactory
     /**
      * Constructor.
      *
-     * @param MappingDriver $mappingDriver        Mapping driver used for loading metadata.
-     * @param CacheStorage  $cache                Cache storage driver for storing and loading
-     *                                            cached metadata.
-     * @param callable      $classBuilder         A callback to return a new 'ClassMetadata' instance.
-     *                                            Arguments: string $rootClass, array $properties, array $methods
+     * @param MappingDriver $mappingDriver Mapping driver used for loading metadata.
+     * @param CacheStorage  $cache         Cache storage driver for storing and loading
+     *                                     cached metadata.
+     * @param callable      $classBuilder  A callback to return a new 'ClassMetadata' instance.
+     *                                     Arguments: string $rootClass, array $properties, array $methods
      */
     public function __construct(
         MappingDriver $mappingDriver,
@@ -117,8 +117,8 @@ final class CacheableMetadataFactory implements MetadataFactory
      * @internal
      *
      * @param string $rootClass
-     * @param array $properties
-     * @param array $methods
+     * @param array  $properties
+     * @param array  $methods
      *
      * @return DefaultClassMetadata
      */

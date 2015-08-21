@@ -185,7 +185,7 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
                 [],
                 [
                     'getBaz' => new MethodMetadataStub('getBaz', self::FIXTURES_COMPLEX_NS.'InterfaceA'),
-                    'getBar' => new MethodMetadataStub('getBar', self::FIXTURES_COMPLEX_NS.'InterfaceA')
+                    'getBar' => new MethodMetadataStub('getBar', self::FIXTURES_COMPLEX_NS.'InterfaceA'),
                 ]
             )
         );

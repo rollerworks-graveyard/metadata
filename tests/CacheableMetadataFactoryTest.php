@@ -220,6 +220,61 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
         );
     }
 
+    /**
+     * @test
+     */
+    public function it_returns_the_merged_hierarchy_Metadata_of_a_class_with_traits()
+    {
+        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_COMPLEX_NS.'SubClassC'))->willReturn(
+            new DefaultClassMetadata(self::FIXTURES_COMPLEX_NS.'SubClassC')
+        );
+
+        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_COMPLEX_NS.'BaseClass'))->willReturn(
+            new DefaultClassMetadata(
+                self::FIXTURES_COMPLEX_NS.'BaseClass',
+                ['foo' => new PropertyMetadataStub('foo', self::FIXTURES_COMPLEX_NS.'BaseClass')],
+                ['getBar' => new MethodMetadataStub('getBar', self::FIXTURES_COMPLEX_NS.'BaseClass')]
+            )
+        );
+
+        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_COMPLEX_NS.'TraitA'))->willReturn(
+            new DefaultClassMetadata(
+                self::FIXTURES_COMPLEX_NS.'TraitA',
+                ['baz' => new PropertyMetadataStub('baz', self::FIXTURES_COMPLEX_NS.'TraitA')],
+                ['getBaz' => new MethodMetadataStub('getBaz', self::FIXTURES_COMPLEX_NS.'TraitA')]
+            )
+        );
+
+        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_COMPLEX_NS.'SubTraitB'))->willReturn(
+            new DefaultClassMetadata(
+                self::FIXTURES_COMPLEX_NS.'SubTraitB',
+                [],
+                ['getWho' => new MethodMetadataStub('getWho', self::FIXTURES_COMPLEX_NS.'SubTraitB')]
+            )
+        );
+
+        $classMetadata = new DefaultClassMetadata(
+            self::FIXTURES_COMPLEX_NS.'SubClassC',
+            [
+                'foo' => new PropertyMetadataStub('foo', self::FIXTURES_COMPLEX_NS.'BaseClass'),
+                'baz' => new PropertyMetadataStub('baz', self::FIXTURES_COMPLEX_NS.'TraitA'),
+            ],
+            [
+                'getBaz' => new MethodMetadataStub('getBaz', self::FIXTURES_COMPLEX_NS.'TraitA'),
+                'getWho' => new MethodMetadataStub('getWho', self::FIXTURES_COMPLEX_NS.'SubTraitB'),
+                'getBar' => new MethodMetadataStub('getBar', self::FIXTURES_COMPLEX_NS.'BaseClass'),
+            ]
+        );
+
+        $this->assertEquals(
+            $classMetadata,
+            $this->create()->getMergedClassMetadata(
+                self::FIXTURES_COMPLEX_NS.'SubClassC',
+                CacheableMetadataFactory::INCLUDE_TRAITS
+            )
+        );
+    }
+
     private function reflectionToken($classMame)
     {
         return new ObjectStateToken('getName', $classMame);

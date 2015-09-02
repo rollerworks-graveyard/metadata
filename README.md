@@ -29,6 +29,11 @@ them for you.
 
 *This library is very young so documentation is currently missing.*
 
+## Credits
+
+The mapping-driver interface is largely inspired on the Doctrine Common
+Persistence library. The `DefaultFileLocator` is almost an exact copy.
+
 ## License
 
 This library is released under the MIT license.

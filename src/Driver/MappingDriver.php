@@ -16,9 +16,9 @@ use Rollerworks\Component\Metadata\ClassMetadata;
 /**
  * Loads the mapping information for a given class name.
  *
- * The loader will only load the mapping of the current class.
- * Child classes or implemented traits/interfaces will not be loaded
- * automatically by an a driver.
+ * The loader will only load the mapping of the requested class.
+ * Inherited classes or implemented traits/interfaces will not be
+ * loaded automatically by the driver.
  *
  * @author Sebastiaan Stok <s.stok@rollerscapes.net>
  */
@@ -32,4 +32,24 @@ interface MappingDriver
      * @return ClassMetadata|null Returns null when no metadata is found.
      */
     public function loadMetadataForClass(\ReflectionClass $class);
+
+    /**
+     * Gets the names of all mapped classes known to this driver.
+     *
+     * @return array The names of all mapped classes known to this driver.
+     */
+    public function getAllClassNames();
+
+    /**
+     * Returns whether the class with the specified name should have
+     * its metadata loaded.
+     *
+     * This can be used for cache warming, where all the class metadata
+     * gets loaded during the deployment process.
+     *
+     * @param string $className
+     *
+     * @return bool
+     */
+    public function isTransient($className);
 }

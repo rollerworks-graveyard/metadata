@@ -163,6 +163,10 @@ final class CacheableMetadataFactory implements MetadataFactory
             $hierarchy = $this->loadInterfaces($hierarchy, $classes);
         }
 
+        if ($flags & self::INCLUDE_TRAITS) {
+            $classes = $this->loadClassTraits($classes);
+        }
+
         $hierarchy = array_merge($hierarchy, $classes);
 
         foreach ($hierarchy as $class) {
@@ -184,15 +188,56 @@ final class CacheableMetadataFactory implements MetadataFactory
 
         foreach ($classes as $class) {
             foreach ($class->getInterfaces() as $interface) {
-                if (isset($interfaces[$interface->getName()])) {
+                if (isset($interfaces[$interface->name])) {
                     continue;
                 }
 
-                $interfaces[$interface->getName()] = true;
+                $interfaces[$interface->name] = true;
                 $hierarchy[] = $interface;
             }
 
             $hierarchy[] = $class;
+        }
+
+        return $hierarchy;
+    }
+
+    /**
+     * @param ReflectionClass[] $classes
+     *
+     * @return string[]
+     */
+    private function loadClassTraits(array $classes)
+    {
+        $hierarchy = [];
+
+        foreach ($classes as $class) {
+            $traits = $this->loadTraits($class->getTraits());
+
+            // Reverse the order of the traits list, (deepest becomes first as later traits overwrite).
+            // And add them before the class (class overwrites traits).
+            $hierarchy = array_merge($hierarchy, array_reverse($traits));
+            $hierarchy[] = $class->name;
+        }
+
+        return $hierarchy;
+    }
+
+    /**
+     * @param ReflectionClass[] $traits
+     * @param array             $hierarchy
+     *
+     * @return string[]
+     */
+    private function loadTraits(array $traits, array $hierarchy = [])
+    {
+        foreach ($traits as $trait) {
+            $hierarchy[] = $trait->name;
+
+            // Load nested traits, can't use a loop here as
+            // there can be more then one trait.
+            // And that would blow my little head...
+            $hierarchy = $this->loadTraits($trait->getTraits(), $hierarchy);
         }
 
         return $hierarchy;

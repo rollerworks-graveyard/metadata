@@ -34,7 +34,7 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
     protected function setUp()
     {
         $this->driver = $this->prophesize('Rollerworks\Component\Metadata\Driver\MappingDriver');
-        $this->cache = $this->prophesize('Rollerworks\Component\Metadata\Cache\CacheStorage');
+        $this->cache = $this->prophesize('Rollerworks\Component\Metadata\Cache\CacheProvider');
     }
 
     /**

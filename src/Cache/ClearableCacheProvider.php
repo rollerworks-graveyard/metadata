@@ -12,10 +12,10 @@
 namespace Rollerworks\Component\Metadata\Cache;
 
 /**
- * A ClearableCacheStorage manages the caching of metadata
+ * A ClearableCacheProvider manages the caching of metadata
  * and allows to delete (clear) all the cached metadata.
  */
-interface ClearableCacheStorage extends CacheStorage
+interface ClearableCacheProvider extends CacheProvider
 {
     /**
      * Delete (clear) all the currently cached metadata.

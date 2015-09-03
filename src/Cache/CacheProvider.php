@@ -14,9 +14,9 @@ namespace Rollerworks\Component\Metadata\Cache;
 use Rollerworks\Component\Metadata\ClassMetadata;
 
 /**
- * A CacheStorage manages the caching of metadata.
+ * A CacheProvider manages the caching of metadata.
  */
-interface CacheStorage
+interface CacheProvider
 {
     /**
      * Fetches a class metadata instance from the cache.

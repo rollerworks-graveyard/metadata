@@ -12,7 +12,7 @@
 namespace Rollerworks\Component\Metadata;
 
 use ReflectionClass;
-use Rollerworks\Component\Metadata\Cache\CacheStorage;
+use Rollerworks\Component\Metadata\Cache\CacheProvider;
 use Rollerworks\Component\Metadata\Driver\MappingDriver;
 
 final class CacheableMetadataFactory implements MetadataFactory
@@ -23,7 +23,7 @@ final class CacheableMetadataFactory implements MetadataFactory
     private $mappingDriver;
 
     /**
-     * @var CacheStorage
+     * @var CacheProvider
      */
     private $cache;
 
@@ -43,14 +43,13 @@ final class CacheableMetadataFactory implements MetadataFactory
      * Constructor.
      *
      * @param MappingDriver $mappingDriver Mapping driver used for loading metadata.
-     * @param CacheStorage  $cache         Cache storage driver for storing and loading
-     *                                     cached metadata.
+     * @param CacheProvider $cache         Cache provider for caching metadata.
      * @param callable      $classBuilder  A callback to return a new 'ClassMetadata' instance.
      *                                     Arguments: string $rootClass, array $properties, array $methods
      */
     public function __construct(
         MappingDriver $mappingDriver,
-        CacheStorage $cache,
+        CacheProvider $cache,
         callable $classBuilder = null
     ) {
         if (null === $classBuilder) {

@@ -73,10 +73,6 @@ final class CacheableMetadataFactory implements MetadataFactory
 
         $cacheKey = str_replace('\\', '.', $className).'.single';
 
-        if (isset($this->loadedMetadata[$cacheKey])) {
-            return $this->loadedMetadata[$cacheKey];
-        }
-
         if ($this->cache->contains($cacheKey)) {
             return $this->cache->fetch($cacheKey);
         }
@@ -96,10 +92,6 @@ final class CacheableMetadataFactory implements MetadataFactory
     public function getMergedClassMetadata($className, $flags = 0)
     {
         $cacheKey = str_replace('\\', '.', $className).'.merged.'.$flags;
-
-        if (isset($this->loadedMetadata[$cacheKey])) {
-            return $this->loadedMetadata[$cacheKey];
-        }
 
         if ($this->cache->contains($cacheKey)) {
             return $this->cache->fetch($cacheKey);

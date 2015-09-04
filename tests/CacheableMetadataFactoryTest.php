@@ -11,9 +11,13 @@
 
 namespace Rollerworks\Component\Metadata\Tests;
 
+use DateTime;
+use Prophecy\Argument;
 use Prophecy\Argument\Token\ObjectStateToken;
 use Prophecy\Prophecy\ObjectProphecy;
+use Rollerworks\Component\Metadata\Cache\ArrayCache;
 use Rollerworks\Component\Metadata\CacheableMetadataFactory;
+use Rollerworks\Component\Metadata\ClassMetadata;
 use Rollerworks\Component\Metadata\DefaultClassMetadata;
 
 final class CacheableMetadataFactoryTest extends MetadataTestCase
@@ -24,9 +28,14 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
     private $driver;
 
     /**
-     * @var ObjectProphecy
+     * @var ArrayCache
      */
     private $cache;
+
+    /**
+     * @var ObjectProphecy
+     */
+    private $freshnessValidator;
 
     const FIXTURES_NS = 'Rollerworks\Component\Metadata\Tests\Fixtures\\';
     const FIXTURES_COMPLEX_NS = 'Rollerworks\Component\Metadata\Tests\Fixtures\ComplexHierarchy\\';
@@ -34,7 +43,8 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
     protected function setUp()
     {
         $this->driver = $this->prophesize('Rollerworks\Component\Metadata\Driver\MappingDriver');
-        $this->cache = $this->prophesize('Rollerworks\Component\Metadata\Cache\CacheProvider');
+        $this->freshnessValidator = $this->prophesize('Rollerworks\Component\Metadata\Cache\FreshnessValidator');
+        $this->cache = new ArrayCache();
     }
 
     /**
@@ -64,8 +74,8 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
         );
 
         $factory = $this->create();
-        $this->assertEquals($classMetadata, $factory->getClassMetadata(self::FIXTURES_NS.'Administrator'));
-        $this->assertEquals($classMetadata, $factory->getMergedClassMetadata(self::FIXTURES_NS.'Administrator'));
+        $this->assertClassMetadataEquals($classMetadata, $factory->getClassMetadata(self::FIXTURES_NS.'Administrator'));
+        $this->assertClassMetadataEquals($classMetadata, $factory->getMergedClassMetadata(self::FIXTURES_NS.'Administrator'));
     }
 
     /**
@@ -78,21 +88,16 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
             ['bar' => new PropertyMetadataStub('bar', self::FIXTURES_NS.'Administrator')]
         );
 
-        $namespace = str_replace('\\', '.', self::FIXTURES_NS);
-        $this->cache->contains($namespace.'Administrator.single')->willReturn(false);
-        $this->cache->contains($namespace.'User.single')->willReturn(false);
-        $this->cache->contains($namespace.'Administrator.merged.0')->willReturn(false);
-        $this->cache->save($namespace.'Administrator.single', $classMetadata)->shouldBeCalled();
-        $this->cache->save($namespace.'Administrator.merged.0', $classMetadata)->shouldBeCalled();
-
         $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_NS.'User'))->willReturn(null);
         $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_NS.'Administrator'))->willReturn(
             $classMetadata
         );
 
-        $factory = $this->create();
-        $this->assertEquals($classMetadata, $factory->getClassMetadata(self::FIXTURES_NS.'Administrator'));
-        $this->assertEquals($classMetadata, $factory->getMergedClassMetadata(self::FIXTURES_NS.'Administrator'));
+        // Use closure to work around the createdAt time.
+        $factory = $this->create(function () use ($classMetadata) { return $classMetadata; });
+
+        $this->assertClassMetadataEquals($classMetadata, $factory->getClassMetadata(self::FIXTURES_NS.'Administrator'));
+        $this->assertClassMetadataEquals($classMetadata, $factory->getMergedClassMetadata(self::FIXTURES_NS.'Administrator'));
     }
 
     /**
@@ -105,18 +110,74 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
             ['bar' => new PropertyMetadataStub('bar', self::FIXTURES_NS.'Administrator')]
         );
 
-        $namespace = str_replace('\\', '.', self::FIXTURES_NS);
-        $this->cache->contains($namespace.'Administrator.single')->willReturn(true);
-        $this->cache->contains($namespace.'Administrator.merged.0')->willReturn(true);
-        $this->cache->fetch($namespace.'Administrator.single')->willReturn($classMetadata);
-        $this->cache->fetch($namespace.'Administrator.merged.0')->willReturn($classMetadata);
+        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_NS.'User'))->willReturn(null);
 
-        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_NS.'User'))->shouldNotBeCalled();
-        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_NS.'Administrator'))->shouldNotBeCalled();
+        // Expect one call for loading, and no further calls as it must use the cache.
+        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_NS.'Administrator'))
+            ->willReturn($classMetadata)
+            ->shouldBeCalledTimes(1)
+        ;
+
+        $this->freshnessValidator->isFresh(Argument::type('Rollerworks\Component\Metadata\DefaultClassMetadata'))->willReturn(true);
+
+        // Use closure to work around the createdAt time.
+        $factory = $this->create(function () use ($classMetadata) { return $classMetadata; });
+
+        $this->assertClassMetadataEquals($classMetadata, $factory->getClassMetadata(self::FIXTURES_NS.'Administrator'));
+        $this->assertClassMetadataEquals($classMetadata, $factory->getMergedClassMetadata(self::FIXTURES_NS.'Administrator'));
+
+        // Second time, should be cached.
+        $this->assertClassMetadataEquals($classMetadata, $factory->getClassMetadata(self::FIXTURES_NS.'Administrator'));
+        $this->assertClassMetadataEquals($classMetadata, $factory->getMergedClassMetadata(self::FIXTURES_NS.'Administrator'));
+    }
+
+    /**
+     * @test
+     */
+    public function it_reloads_metadata_when_metadata_is_not_fresh()
+    {
+        $state = 0;
+
+        $expiredClassMetadata = new DefaultClassMetadata(
+            self::FIXTURES_NS.'Administrator',
+            ['bar' => new PropertyMetadataStub('bar', self::FIXTURES_NS.'Administrator')],
+            [],
+            new DateTime('1990-05-05')
+        );
+
+        $freshClassMetadata = new DefaultClassMetadata(
+            self::FIXTURES_NS.'Administrator',
+            ['bar' => new PropertyMetadataStub('bar', self::FIXTURES_NS.'Administrator')],
+            [],
+            new DateTime('now + 80 seconds')
+        );
+
+        $this->freshnessValidator->isFresh($expiredClassMetadata)->willReturn(false);
+        $this->freshnessValidator->isFresh($freshClassMetadata)->willReturn(true);
+
+        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_NS.'User'))->willReturn(null);
+
+        // Expect two calls. one for initial loading (expired data), then another one for getting the new (fresh data)
+        // then no more calls as the cache is now fresh again.
+        $this->driver->loadMetadataForClass($this->reflectionToken(self::FIXTURES_NS.'Administrator'))
+            ->will(function () use (&$state, $expiredClassMetadata, $freshClassMetadata) {
+                if (0 === $state) {
+                    $state = 1;
+
+                    return $expiredClassMetadata;
+                }
+
+                return $freshClassMetadata;
+            })
+            ->shouldBeCalledTimes(2)
+        ;
 
         $factory = $this->create();
-        $this->assertEquals($classMetadata, $factory->getClassMetadata(self::FIXTURES_NS.'Administrator'));
-        $this->assertEquals($classMetadata, $factory->getMergedClassMetadata(self::FIXTURES_NS.'Administrator'));
+
+        $this->assertClassMetadataEquals($expiredClassMetadata, $factory->getClassMetadata(self::FIXTURES_NS.'Administrator'));
+
+        // Second time, should be cached.
+        $this->assertClassMetadataEquals($freshClassMetadata, $factory->getClassMetadata(self::FIXTURES_NS.'Administrator'));
     }
 
     /**
@@ -150,7 +211,7 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
             ]
         );
 
-        $this->assertEquals(
+        $this->assertClassMetadataEquals(
             $classMetadata,
             $this->create()->getMergedClassMetadata(self::FIXTURES_COMPLEX_NS.'SubClassA')
         );
@@ -211,7 +272,7 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
             ]
         );
 
-        $this->assertEquals(
+        $this->assertClassMetadataEquals(
             $classMetadata,
             $this->create()->getMergedClassMetadata(
                 self::FIXTURES_COMPLEX_NS.'SubClassB',
@@ -266,13 +327,21 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
             ]
         );
 
-        $this->assertEquals(
+        $this->assertClassMetadataEquals(
             $classMetadata,
             $this->create()->getMergedClassMetadata(
                 self::FIXTURES_COMPLEX_NS.'SubClassC',
                 CacheableMetadataFactory::INCLUDE_TRAITS
             )
         );
+    }
+
+    private function assertClassMetadataEquals(ClassMetadata $expected, ClassMetadata $actual)
+    {
+        $this->assertInstanceOf(get_class($expected), $actual);
+        $this->assertEquals($expected->getClassName(), $actual->getClassName());
+        $this->assertEquals($expected->getProperties(), $actual->getProperties());
+        $this->assertEquals($expected->getMethods(), $actual->getMethods());
     }
 
     private function reflectionToken($classMame)
@@ -284,7 +353,8 @@ final class CacheableMetadataFactoryTest extends MetadataTestCase
     {
         return new CacheableMetadataFactory(
             $this->driver->reveal(),
-            $this->cache->reveal(),
+            $this->cache,
+            $this->freshnessValidator->reveal(),
             $metadataClass
         );
     }

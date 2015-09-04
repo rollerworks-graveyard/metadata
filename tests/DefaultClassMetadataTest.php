@@ -68,4 +68,31 @@ final class DefaultClassMetadataTest extends MetadataTestCase
         $this->assertSame($reflection, $this->metadata->getReflection()); // test caching
         $this->assertEquals('stdClass', $reflection->getName());
     }
+
+    /**
+     * @test
+     */
+    public function it_supports_tracking_file_resources()
+    {
+        $metadata = new DefaultClassMetadata(
+            'stdClass',
+            ['id' => $idProperty = $this->createPropertyMetadata('id', 'stdClass')],
+            ['getId' => $idMethod = $this->createMethodMetadata('getId', 'stdClass')]
+        );
+
+        $classMetadata = $this->metadata->merge($metadata);
+
+        $expected = new DefaultClassMetadata(
+            'stdClass',
+            ['id' => $idProperty],
+            ['getId' => $idMethod],
+            $metadata->getCreatedAt()
+        );
+
+        $this->assertInstanceOf(get_class($this->metadata), $classMetadata);
+        $this->assertEquals($expected->getClassName(), $classMetadata->getClassName());
+        $this->assertEquals($expected->getProperties(), $classMetadata->getProperties());
+        $this->assertEquals($expected->getMethods(), $classMetadata->getMethods());
+        $this->assertEquals($expected->getCreatedAt(), $classMetadata->getCreatedAt());
+    }
 }

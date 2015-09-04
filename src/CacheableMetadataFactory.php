@@ -13,6 +13,7 @@ namespace Rollerworks\Component\Metadata;
 
 use ReflectionClass;
 use Rollerworks\Component\Metadata\Cache\CacheProvider;
+use Rollerworks\Component\Metadata\Cache\FreshnessValidator;
 use Rollerworks\Component\Metadata\Driver\MappingDriver;
 
 final class CacheableMetadataFactory implements MetadataFactory
@@ -28,37 +29,55 @@ final class CacheableMetadataFactory implements MetadataFactory
     private $cache;
 
     /**
-     * @var string
+     * @var FreshnessValidator
      */
-    private $classBuilder;
+    private $freshnessValidator;
 
     /**
-     * Array of already loaded class metadata.
-     *
-     * @var array
+     * @var HierarchyResolver
      */
-    private $loadedMetadata = [];
+    private $hierarchyResolver;
+
+    /**
+     * @var callable
+     */
+    private $rootMetadataBuilder;
 
     /**
      * Constructor.
      *
-     * @param MappingDriver $mappingDriver Mapping driver used for loading metadata.
-     * @param CacheProvider $cache         Cache provider for caching metadata.
-     * @param callable      $classBuilder  A callback to return a new 'ClassMetadata' instance.
-     *                                     Arguments: string $rootClass, array $properties, array $methods
+     * @param MappingDriver      $mappingDriver       Mapping driver used for loading metadata.
+     * @param CacheProvider      $cache               Cache provider for caching metadata. FreshnessValidator
+     * @param FreshnessValidator $freshnessValidator  Freshness validator to check if the ClassMetadata
+     *                                                is still fresh.
+     * @param callable           $rootMetadataBuilder Callback for creating a new ClassMetadata instance,
+     *                                                this only receives the className and should create the
+     *                                                same class as returned by the drivers.
      */
     public function __construct(
         MappingDriver $mappingDriver,
         CacheProvider $cache,
-        callable $classBuilder = null
+        FreshnessValidator $freshnessValidator,
+        callable $rootMetadataBuilder = null
     ) {
-        if (null === $classBuilder) {
-            $classBuilder = 'Rollerworks\Component\Metadata\CacheableMetadataFactory::newClassMetadata';
-        }
+        $this->hierarchyResolver = new HierarchyResolver();
 
         $this->cache = $cache;
         $this->mappingDriver = $mappingDriver;
-        $this->classBuilder = $classBuilder;
+        $this->freshnessValidator = $freshnessValidator;
+        $this->rootMetadataBuilder = $rootMetadataBuilder ?: [$this, 'createRootMetadata'];
+    }
+
+    /**
+     * Create a new ClassMetadata instance for getMergedClassMetadata().
+     *
+     * @param string $className
+     *
+     * @return FileTrackingClassMetadata
+     */
+    public function createRootMetadata($className)
+    {
+        return new FileTrackingClassMetadata($className);
     }
 
     /**
@@ -73,8 +92,8 @@ final class CacheableMetadataFactory implements MetadataFactory
 
         $cacheKey = str_replace('\\', '.', $className).'.single';
 
-        if ($this->cache->contains($cacheKey)) {
-            return $this->cache->fetch($cacheKey);
+        if (null !== $classMetadata = $this->freshOrNull($this->cache->fetch($cacheKey))) {
+            return $classMetadata;
         }
 
         $reflection = $className instanceof ReflectionClass ? $className : new ReflectionClass($className);
@@ -93,8 +112,8 @@ final class CacheableMetadataFactory implements MetadataFactory
     {
         $cacheKey = str_replace('\\', '.', $className).'.merged.'.$flags;
 
-        if ($this->cache->contains($cacheKey)) {
-            return $this->cache->fetch($cacheKey);
+        if (null !== $classMetadata = $this->freshOrNull($this->cache->fetch($cacheKey))) {
+            return $classMetadata;
         }
 
         return $this->filterAndStore(
@@ -105,17 +124,19 @@ final class CacheableMetadataFactory implements MetadataFactory
     }
 
     /**
-     * @internal
+     * Internal method for handling refreshing of metadata.
      *
-     * @param string $rootClass
-     * @param array  $properties
-     * @param array  $methods
+     * @param ClassMetadata|null $classMetadata
      *
-     * @return DefaultClassMetadata
+     * @return ClassMetadata|null
      */
-    public static function newClassMetadata($rootClass, $properties, $methods)
+    private function freshOrNull(ClassMetadata $classMetadata = null)
     {
-        return new DefaultClassMetadata($rootClass, $properties, $methods);
+        if (null === $classMetadata) {
+            return;
+        }
+
+        return $this->freshnessValidator->isFresh($classMetadata) ? $classMetadata : null;
     }
 
     private function filterAndStore(ClassMetadata $classMetadata = null, $cacheKey, $className)
@@ -128,7 +149,6 @@ final class CacheableMetadataFactory implements MetadataFactory
             return $classMetadata;
         }
 
-        $this->loadedMetadata[$cacheKey] = $classMetadata;
         $this->cache->save($cacheKey, $classMetadata);
 
         return $classMetadata;
@@ -136,101 +156,19 @@ final class CacheableMetadataFactory implements MetadataFactory
 
     private function loadClassMetadata($className, $flags = 0)
     {
-        $refl = new ReflectionClass($className);
-        $builder = new ClassMetadataBuilder($className, $this->classBuilder);
-
-        /** @var ReflectionClass[] $classes */
-        $classes = [];
-        $hierarchy = [];
-
-        do {
-            $classes[] = $refl;
-            $refl = $refl->getParentClass();
-        } while (false !== $refl);
-
-        $classes = array_reverse($classes);
-
-        if ($flags & self::INCLUDE_INTERFACES) {
-            $hierarchy = $this->loadInterfaces($hierarchy, $classes);
-        }
-
-        if ($flags & self::INCLUDE_TRAITS) {
-            $classes = $this->loadClassTraits($classes);
-        }
-
-        $hierarchy = array_merge($hierarchy, $classes);
+        $hierarchy = $this->hierarchyResolver->getClassHierarchy(new ReflectionClass($className), $flags);
+        $classMetadata = call_user_func($this->rootMetadataBuilder, $className);
 
         foreach ($hierarchy as $class) {
-            $builder->mergeClassMetadata($this->getClassMetadata($class));
-        }
-
-        return $builder->getClassMetadata();
-    }
-
-    /**
-     * @param array             $hierarchy
-     * @param ReflectionClass[] $classes
-     *
-     * @return string[]
-     */
-    private function loadInterfaces(array $hierarchy, array $classes)
-    {
-        $interfaces = [];
-
-        foreach ($classes as $class) {
-            foreach ($class->getInterfaces() as $interface) {
-                if (isset($interfaces[$interface->name])) {
-                    continue;
-                }
-
-                $interfaces[$interface->name] = true;
-                $hierarchy[] = $interface;
+            if (null !== $otherMetadata = $this->getClassMetadata($class)) {
+                $classMetadata = $classMetadata->merge($otherMetadata);
             }
-
-            $hierarchy[] = $class;
         }
 
-        return $hierarchy;
-    }
-
-    /**
-     * @param ReflectionClass[] $classes
-     *
-     * @return string[]
-     */
-    private function loadClassTraits(array $classes)
-    {
-        $hierarchy = [];
-
-        foreach ($classes as $class) {
-            $traits = $this->loadTraits($class->getTraits());
-
-            // Reverse the order of the traits list, (deepest becomes first as later traits overwrite).
-            // And add them before the class (class overwrites traits).
-            $hierarchy = array_merge($hierarchy, array_reverse($traits));
-            $hierarchy[] = $class->name;
+        if (0 === count($classMetadata->getProperties()) && 0 === count($classMetadata->getMethods())) {
+            $classMetadata = new NullClassMetadata($className);
         }
 
-        return $hierarchy;
-    }
-
-    /**
-     * @param ReflectionClass[] $traits
-     * @param array             $hierarchy
-     *
-     * @return string[]
-     */
-    private function loadTraits(array $traits, array $hierarchy = [])
-    {
-        foreach ($traits as $trait) {
-            $hierarchy[] = $trait->name;
-
-            // Load nested traits, can't use a loop here as
-            // there can be more then one trait.
-            // And that would blow my little head...
-            $hierarchy = $this->loadTraits($trait->getTraits(), $hierarchy);
-        }
-
-        return $hierarchy;
+        return $classMetadata;
     }
 }

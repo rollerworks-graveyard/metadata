@@ -11,6 +11,7 @@
 
 namespace Rollerworks\Component\Metadata;
 
+use DateTime;
 use ReflectionClass;
 
 /**
@@ -29,15 +30,33 @@ class NullClassMetadata implements ClassMetadata
     private $reflection;
 
     /**
+     * @var \DateTime
+     */
+    private $createdAt;
+
+    /**
      * Constructor.
      *
-     * @param string             $className
-     * @param PropertyMetadata[] $properties
-     * @param MethodMetadata[]   $methods
+     * @param string            $className
+     * @param DateTime $createdAt
      */
-    public function __construct($className, array $properties = [], array $methods = [])
+    public function __construct($className, DateTime $createdAt = null)
     {
         $this->className = $className;
+        $this->createdAt = $createdAt ?: new DateTime();
+    }
+
+    /**
+     * Returns when the ClassMetadata was created.
+     *
+     * This information can be used to check the freshness
+     * of the current ClassMetadata.
+     *
+     * @return DateTime
+     */
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
     }
 
     /**
@@ -67,7 +86,7 @@ class NullClassMetadata implements ClassMetadata
     /**
      * Returns the properties metadata of a class.
      *
-     * @return PropertyMetadata[]
+     * @return PropertyMetadata[] Empty array.
      */
     public function getProperties()
     {
@@ -79,7 +98,7 @@ class NullClassMetadata implements ClassMetadata
      *
      * @param string $name Name of the property.
      *
-     * @return PropertyMetadata|null
+     * @return null
      */
     public function getProperty($name)
     {
@@ -88,7 +107,7 @@ class NullClassMetadata implements ClassMetadata
     /**
      * Returns the methods metadata of a class.
      *
-     * @return MethodMetadata[]
+     * @return MethodMetadata[] Empty array.
      */
     public function getMethods()
     {
@@ -100,7 +119,7 @@ class NullClassMetadata implements ClassMetadata
      *
      * @param string $name Name of the method.
      *
-     * @return MethodMetadata|null
+     * @return null
      */
     public function getMethod($name)
     {
@@ -108,11 +127,36 @@ class NullClassMetadata implements ClassMetadata
 
     public function serialize()
     {
-        return serialize([$this->className]);
+        return serialize([$this->className, $this->createdAt]);
     }
 
     public function unserialize($serialized)
     {
-        list($this->className) = unserialize($serialized);
+        list($this->className, $this->createdAt) = unserialize($serialized);
+    }
+
+    /**
+     * Returns a new NullClassMetadata the highest createdAt.
+     *
+     * No actual merging is performed as NullClassMetadata can't hold
+     * any data and it's not possible to determine which ClassMetadata
+     * implementation must be used.
+     *
+     * Only the createdAt of the object is used if it's higher then
+     * the current createdAt value.
+     *
+     * @param ClassMetadata $object Another MergeableClassMetadata object.
+     *
+     * @return NullClassMetadata
+     */
+    public function merge(ClassMetadata $object)
+    {
+        $createdAt = $this->createdAt;
+
+        if (($otherCreatedAt = $object->getCreatedAt()) > $createdAt) {
+            $createdAt = $otherCreatedAt;
+        }
+
+        return new self($this->className, $createdAt);
     }
 }

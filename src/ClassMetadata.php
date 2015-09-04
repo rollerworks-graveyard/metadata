@@ -21,6 +21,16 @@ interface ClassMetadata extends \Serializable
     public function getClassName();
 
     /**
+     * Returns when the ClassMetadata was created.
+     *
+     * This information can be used to check the freshness
+     * of the current ClassMetadata.
+     *
+     * @return \DateTime
+     */
+    public function getCreatedAt();
+
+    /**
      * Return class reflection object.
      *
      * @return \ReflectionClass
@@ -58,4 +68,18 @@ interface ClassMetadata extends \Serializable
      * @return MethodMetadata|null
      */
     public function getMethod($name);
+
+    /**
+     * Merge the ClassMetadata of the object with the current ClassMetadata
+     * into a new object.
+     *
+     * Note: instead of modifying the current ClassMetadata
+     * you should instead return a new object.
+     *
+     * @param ClassMetadata $object Another MergeableClassMetadata object.
+     *
+     * @return self New ClassMetadata instance with
+     *              the merged class metadata.
+     */
+    public function merge(ClassMetadata $object);
 }

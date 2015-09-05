@@ -11,6 +11,7 @@
 
 namespace Rollerworks\Component\Metadata;
 
+use DateTime;
 use ReflectionClass;
 
 class DefaultClassMetadata implements ClassMetadata
@@ -18,22 +19,27 @@ class DefaultClassMetadata implements ClassMetadata
     /**
      * @var string
      */
-    private $className;
+    protected $className;
 
     /**
      * @var PropertyMetadata[]
      */
-    private $properties = [];
+    protected $properties = [];
 
     /**
      * @var MethodMetadata[]
      */
-    private $methods = [];
+    protected $methods = [];
 
     /**
      * @var ReflectionClass
      */
-    private $reflection;
+    protected $reflection;
+
+    /**
+     * @var DateTime
+     */
+    protected $createdAt;
 
     /**
      * Constructor.
@@ -41,12 +47,32 @@ class DefaultClassMetadata implements ClassMetadata
      * @param string             $className
      * @param PropertyMetadata[] $properties
      * @param MethodMetadata[]   $methods
+     * @param DateTime  $createdAt
      */
-    public function __construct($className, array $properties = [], array $methods = [])
-    {
+    public function __construct(
+        $className,
+        array $properties = [],
+        array $methods = [],
+        DateTime $createdAt = null
+    ) {
         $this->className = $className;
         $this->properties = $properties;
         $this->methods = $methods;
+
+        $this->createdAt = $createdAt ?: new DateTime();
+    }
+
+    /**
+     * Returns when the ClassMetadata was created.
+     *
+     * This information can be used to check the freshness
+     * of the current ClassMetadata.
+     *
+     * @return \DateTime
+     */
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
     }
 
     /**
@@ -119,11 +145,57 @@ class DefaultClassMetadata implements ClassMetadata
 
     public function serialize()
     {
-        return serialize([$this->className, $this->properties, $this->methods]);
+        return serialize(
+            [
+                $this->className,
+                $this->properties,
+                $this->methods,
+                $this->createdAt,
+            ]
+        );
     }
 
     public function unserialize($serialized)
     {
-        list($this->className, $this->properties, $this->methods) = unserialize($serialized);
+        list(
+            $this->className,
+            $this->properties,
+            $this->methods,
+            $this->createdAt
+        ) = unserialize($serialized);
+    }
+
+    /**
+     * Merge the ClassMetadata of the object with the current ClassMetadata
+     * into a new object.
+     *
+     * Note: instead of modifying the current ClassMetadata
+     * you should instead return a new object.
+     *
+     * @param ClassMetadata $object Another MergeableClassMetadata object.
+     *
+     * @return self New ClassMetadata instance with
+     *              the merged class metadata.
+     */
+    public function merge(ClassMetadata $object)
+    {
+        $properties = $this->properties;
+        $methods = $this->methods;
+
+        foreach ($object->getProperties() as $property) {
+            $properties[$property->getName()] = $property;
+        }
+
+        foreach ($object->getMethods() as $method) {
+            $methods[$method->getName()] = $method;
+        }
+
+        $createdAt = $this->createdAt;
+
+        if (($otherCreatedAt = $object->getCreatedAt()) > $createdAt) {
+            $createdAt = $otherCreatedAt;
+        }
+
+        return new static($this->className, $properties, $methods, $createdAt);
     }
 }

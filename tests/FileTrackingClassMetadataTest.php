@@ -108,4 +108,12 @@ final class FileTrackingClassMetadataTest extends MetadataTestCase
 
         $this->assertFalse($this->metadata->isFresh());
     }
+
+    /**
+     * @test
+     */
+    public function it_can_be_serialized()
+    {
+        $this->assertEquals($this->metadata, unserialize(serialize($this->metadata)));
+    }
 }

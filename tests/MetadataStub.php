@@ -24,10 +24,17 @@ abstract class MetadataStub
 
     public function serialize()
     {
+        return serialize(
+            [
+                $this->name,
+                $this->className,
+            ]
+        );
     }
 
     public function unserialize($serialized)
     {
+        list($this->name, $this->className) = unserialize($serialized);
     }
 
     public function getClassName()

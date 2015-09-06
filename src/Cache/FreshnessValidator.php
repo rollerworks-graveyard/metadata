@@ -30,6 +30,7 @@ interface FreshnessValidator
      * Validates the ClassMetadata for freshness.
      *
      * @param ClassMetadata $metadata The ClassMetadata to be checked for freshness.
+     *                                Should return false if unable validate.
      *
      * @return bool True if the ClassMetadata has not changed since it was created,
      *              false otherwise.

@@ -47,7 +47,7 @@ class DefaultClassMetadata implements ClassMetadata
      * @param string             $className
      * @param PropertyMetadata[] $properties
      * @param MethodMetadata[]   $methods
-     * @param DateTime  $createdAt
+     * @param DateTime           $createdAt
      */
     public function __construct(
         $className,

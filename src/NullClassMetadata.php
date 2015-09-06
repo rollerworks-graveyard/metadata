@@ -37,7 +37,7 @@ class NullClassMetadata implements ClassMetadata
     /**
      * Constructor.
      *
-     * @param string            $className
+     * @param string   $className
      * @param DateTime $createdAt
      */
     public function __construct($className, DateTime $createdAt = null)
@@ -47,12 +47,7 @@ class NullClassMetadata implements ClassMetadata
     }
 
     /**
-     * Returns when the ClassMetadata was created.
-     *
-     * This information can be used to check the freshness
-     * of the current ClassMetadata.
-     *
-     * @return DateTime
+     * {@inheritdoc}
      */
     public function getCreatedAt()
     {
@@ -60,9 +55,7 @@ class NullClassMetadata implements ClassMetadata
     }
 
     /**
-     * Return the class name.
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function getClassName()
     {
@@ -70,9 +63,7 @@ class NullClassMetadata implements ClassMetadata
     }
 
     /**
-     * Return class reflection object.
-     *
-     * @return ReflectionClass
+     * {@inheritdoc}
      */
     public function getReflection()
     {
@@ -84,9 +75,7 @@ class NullClassMetadata implements ClassMetadata
     }
 
     /**
-     * Returns the properties metadata of a class.
-     *
-     * @return PropertyMetadata[] Empty array.
+     * {@inheritdoc}
      */
     public function getProperties()
     {
@@ -94,20 +83,14 @@ class NullClassMetadata implements ClassMetadata
     }
 
     /**
-     * Returns the properties metadata of a class.
-     *
-     * @param string $name Name of the property.
-     *
-     * @return null
+     * {@inheritdoc}
      */
     public function getProperty($name)
     {
     }
 
     /**
-     * Returns the methods metadata of a class.
-     *
-     * @return MethodMetadata[] Empty array.
+     * {@inheritdoc}
      */
     public function getMethods()
     {
@@ -115,11 +98,7 @@ class NullClassMetadata implements ClassMetadata
     }
 
     /**
-     * Returns the methods metadata of a class.
-     *
-     * @param string $name Name of the method.
-     *
-     * @return null
+     * {@inheritdoc}
      */
     public function getMethod($name)
     {
@@ -136,7 +115,7 @@ class NullClassMetadata implements ClassMetadata
     }
 
     /**
-     * Returns a new NullClassMetadata the highest createdAt.
+     * Returns a new NullClassMetadata with the highest createdAt.
      *
      * No actual merging is performed as NullClassMetadata can't hold
      * any data and it's not possible to determine which ClassMetadata

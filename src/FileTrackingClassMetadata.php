@@ -26,7 +26,7 @@ class FileTrackingClassMetadata extends DefaultClassMetadata
      * @param string             $className
      * @param PropertyMetadata[] $properties
      * @param MethodMetadata[]   $methods
-     * @param DateTime  $createdAt
+     * @param DateTime           $createdAt
      * @param string[]           $fileResources
      */
     public function __construct(

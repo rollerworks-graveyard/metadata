@@ -39,6 +39,7 @@ interface CacheProvider
     /**
      * Puts the class metadata into the cache.
      *
+     * @param string        $key
      * @param ClassMetadata $metadata
      */
     public function save($key, ClassMetadata $metadata);

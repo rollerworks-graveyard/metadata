@@ -18,7 +18,7 @@ class FileTrackingClassMetadata extends DefaultClassMetadata
     /**
      * @var string[]
      */
-    private $fileResources = [];
+    protected $fileResources = [];
 
     /**
      * Constructor.

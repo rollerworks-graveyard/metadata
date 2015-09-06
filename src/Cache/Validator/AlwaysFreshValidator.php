@@ -9,13 +9,19 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Rollerworks\Component\Metadata\Cache;
+namespace Rollerworks\Component\Metadata\Cache\Validator;
 
+use Rollerworks\Component\Metadata\Cache\ChainableFreshnessValidator;
 use Rollerworks\Component\Metadata\ClassMetadata;
 
-final class AlwaysFreshValidator implements FreshnessValidator
+final class AlwaysFreshValidator implements ChainableFreshnessValidator
 {
     public function isFresh(ClassMetadata $metadata)
+    {
+        return true;
+    }
+
+    public function accepts(ClassMetadata $metadata)
     {
         return true;
     }

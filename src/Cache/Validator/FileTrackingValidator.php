@@ -13,16 +13,27 @@ namespace Rollerworks\Component\Metadata\Cache\Validator;
 
 use Rollerworks\Component\Metadata\Cache\ChainableFreshnessValidator;
 use Rollerworks\Component\Metadata\ClassMetadata;
+use Rollerworks\Component\Metadata\FileTrackingClassMetadata;
 
-final class AlwaysFreshValidator implements ChainableFreshnessValidator
+final class FileTrackingValidator implements ChainableFreshnessValidator
 {
+    /**
+     * {@inheritdoc}
+     */
     public function isFresh(ClassMetadata $metadata)
     {
-        return true;
+        if ($metadata instanceof FileTrackingClassMetadata) {
+            return $metadata->isFresh();
+        }
+
+        return false;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function accepts(ClassMetadata $metadata)
     {
-        return true;
+        return $metadata instanceof FileTrackingClassMetadata;
     }
 }

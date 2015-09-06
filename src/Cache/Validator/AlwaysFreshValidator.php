@@ -9,8 +9,9 @@
  * with this source code in the file LICENSE.
  */
 
-namespace Rollerworks\Component\Metadata\Cache;
+namespace Rollerworks\Component\Metadata\Cache\Validator;
 
+use Rollerworks\Component\Metadata\Cache\FreshnessValidator;
 use Rollerworks\Component\Metadata\ClassMetadata;
 
 final class AlwaysFreshValidator implements FreshnessValidator

@@ -1,6 +1,11 @@
 Rollerworks Metadata Component
 ==============================
 
+[![Scrutinizer](https://img.shields.io/scrutinizer/g/rollerworks/rollerworks-metadata.svg)](https://scrutinizer-ci.com/g/rollerworks/rollerworks-metadata/badges/quality-score.png?b=master)
+[![SensioLabsInsight](https://img.shields.io/sensiolabs/i/2da37ae8-51f9-42c8-8d0f-239faf857930.svg)](https://insight.sensiolabs.com/projects/2da37ae8-51f9-42c8-8d0f-239faf857930)
+[![Build Status](https://travis-ci.org/rollerworks/rollerworks-metadata.svg?branch=master)](https://travis-ci.org/rollerworks/rollerworks-metadata)
+[![StyleCI](https://styleci.io/repos/40754380/shield?style=flat&source=github)](https://styleci.io/repos/40754380)
+
 The Rollerworks Metadata Component is a PHP library providing a mechanisms
 to easily load annotated configuration (or metadata) of Classes, methods and
 properties from different sources like PHPDoc Annotations, YAML or XML.

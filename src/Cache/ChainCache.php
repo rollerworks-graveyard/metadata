@@ -42,6 +42,7 @@ class ChainCache implements CacheProvider, ClearableCacheProvider
     {
         foreach ($this->cacheProviders as $providerKey => $cacheProvider) {
             if ($cacheProvider->contains($key)) {
+                /** @var ClassMetadata $metadata */
                 $metadata = $cacheProvider->fetch($key);
 
                 // Populate all the previous cache layers (that are assumed to be faster).
@@ -52,8 +53,6 @@ class ChainCache implements CacheProvider, ClearableCacheProvider
                 return $metadata;
             }
         }
-
-        return;
     }
 
     /**

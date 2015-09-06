@@ -99,9 +99,9 @@ final class CacheableMetadataFactory implements MetadataFactory
         $reflection = $className instanceof ReflectionClass ? $className : new ReflectionClass($className);
 
         return $this->filterAndStore(
-            $this->mappingDriver->loadMetadataForClass($reflection),
             $cacheKey,
-            $className
+            $className,
+            $this->mappingDriver->loadMetadataForClass($reflection)
         );
     }
 
@@ -117,9 +117,9 @@ final class CacheableMetadataFactory implements MetadataFactory
         }
 
         return $this->filterAndStore(
-            $this->loadClassMetadata($className, $flags),
             $cacheKey,
-            $className
+            $className,
+            $this->loadClassMetadata($className, $flags)
         );
     }
 
@@ -139,7 +139,7 @@ final class CacheableMetadataFactory implements MetadataFactory
         return $this->freshnessValidator->isFresh($classMetadata) ? $classMetadata : null;
     }
 
-    private function filterAndStore(ClassMetadata $classMetadata = null, $cacheKey, $className)
+    private function filterAndStore($cacheKey, $className, ClassMetadata $classMetadata = null)
     {
         if (null === $classMetadata) {
             return new NullClassMetadata($className);

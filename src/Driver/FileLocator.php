@@ -26,14 +26,14 @@ interface FileLocator
      *
      * @param string $className
      *
-     * @return string
+     * @return string|null Returns NULL when no mapping file is found.
      */
     public function findMappingFile($className);
 
     /**
      * Gets all class names that are found with this file locator.
      *
-     * @return string[]
+     * @return string[] An array of fully qualified classes names.
      */
     public function getAllClassNames();
 
@@ -42,7 +42,8 @@ interface FileLocator
      *
      * @param string $className
      *
-     * @return bool
+     * @return bool True when a mapping file exists for the class,
+     *              false otherwise.
      */
     public function fileExists($className);
 }

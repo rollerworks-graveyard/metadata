@@ -45,11 +45,4 @@ interface FileLocator
      * @return bool
      */
     public function fileExists($className);
-
-    /**
-     * Gets the file extension that mapping files are suffixed with.
-     *
-     * @return string
-     */
-    public function getFileExtension();
 }

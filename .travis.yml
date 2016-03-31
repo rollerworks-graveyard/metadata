@@ -8,13 +8,12 @@ php:
     - hhvm
 
 matrix:
-#    include:
-#        - php: 5.4
-#          env: DEPENDENCIES='low'
-#        - php: 5.6
-#          env: DEPENDENCIES='dev'
-    allow_failures:
+    include:
+        - php: 5.4
+          env: DEPENDENCIES='low'
         - php: 7.0
+          env: DEPENDENCIES='dev'
+    allow_failures:
         - env: DEPENDENCIES='dev'
     fast_finish: true
 
